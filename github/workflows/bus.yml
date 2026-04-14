@@ -1,0 +1,33 @@
+name: Morning Bus Alarm
+
+on:
+  schedule:
+    # 5분마다 실행 (UTC 기준 22:00 ~ 23:05은 한국 시간 07:00 ~ 08:05)
+    # 월요일부터 금요일까지 작동 (1-5)
+    - cron: '*/5 22-23 * * 1-5'
+  workflow_dispatch: # 버튼을 눌러서 수동으로 테스트해볼 수 있게 하는 설정
+
+jobs:
+  check-bus-arrival:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pytz
+
+      - name: Run bus alarm script
+        env:
+          # GitHub Secrets에 저장된 값을 환경 변수로 불러옵니다.
+          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python main.py
