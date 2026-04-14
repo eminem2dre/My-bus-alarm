@@ -14,7 +14,7 @@ jobs:
       - run: pip install requests pytz
       - name: Run
         env:
-          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          BUS_API_KEY: ${{secrets.BUS_API_KEY}}
+          TG_BOT_TOKEN: ${{secrets.TG_BOT_TOKEN}}
+          TG_CHAT_ID: ${{secrets.TG_CHAT_ID}}
         run: python main.py
