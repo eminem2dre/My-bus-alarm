@@ -76,7 +76,3 @@ def get_bus_info():
 
 if __name__ == "__main__":
     get_bus_info()
-```
-
-변경 요약: 환경변수 누락 시 조기 종료, HTTP 상태 및 API `resultCode` 검증, `predict_time` 스코프 정리, 텔레그램 응답 확인, 예외를 종류별로 분리, 상수를 모두 상단으로 통일했습니다.
-
