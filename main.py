@@ -2,39 +2,47 @@ import os
 import requests
 import datetime
 import pytz
+import xml.etree.ElementTree as ET
 
 def get_bus_info():
-    # 1. 한국 시간 설정 (현재 오전 7시 30분 상황 반영)
     kst = pytz.timezone('Asia/Seoul')
     now = datetime.datetime.now(kst)
-    print(f"[{now.strftime('%Y-%m-%d %H:%M:%S')}] 스크립트 실행 시작")
-
-    # 2. 환경 변수 로드
+    
     api_key = os.environ.get('BUS_API_KEY')
     bot_token = os.environ.get('TG_BOT_TOKEN')
     chat_id = os.environ.get('TG_CHAT_ID')
 
-    # 3. 버스 API 설정 (경기도 v2 주소 + 정류소 ID 19573)
-    url = "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalList"
+    # 705번 노선 ID (경기도 기준)
+    TARGET_ROUTE_ID = '229000045'
     
-    params = {
-        'serviceKey': api_key,
-        'stationId': '19573', # 어제 알려주신 정류소 번호 적용
-        'format': 'json'
-    }
+    url = "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalList"
+    params = {'serviceKey': api_key, 'stationId': '19573'}
 
     try:
-        # API 호출
         response = requests.get(url, params=params, timeout=10)
-        print(f"API 응답 상태: {response.status_code}")
+        root = ET.fromstring(response.content)
         
-        # 4. 텔레그램 메시지 조립 및 전송
-        # 지금은 실행 확인용이며, 나중에 도착 시간 데이터를 뽑아서 넣을 수 있습니다.
-        msg = f"🚌 [19573 정류소] {now.strftime('%H:%M')} 알림\n서버 정상 작동 중입니다."
+        msg = ""
+        should_send = False
 
-        send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        requests.post(send_url, data={'chat_id': chat_id, 'text': msg})
-        print("텔레그램 전송 완료")
+        for arrival in root.findall('.//busArrivalList'):
+            route_id = arrival.findtext('routeId')
+            
+            # 705번 노선만 필터링
+            if route_id == TARGET_ROUTE_ID:
+                predict_time = arrival.findtext('predictTime1')
+                
+                if predict_time and int(predict_time) < 10:
+                    msg = f"⚠️ [705번 알람]\n현재 {predict_time}분 전입니다. 빨리 나오세요!"
+                    should_send = True
+                break # 705번 찾았으면 루프 종료
+
+        if should_send:
+            send_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            requests.post(send_url, data={'chat_id': chat_id, 'text': msg})
+            print(f"705번 {predict_time}분 전 - 전송 완료")
+        else:
+            print("705번이 10분 이상 남았거나 정보가 없음 - 전송 스킵")
 
     except Exception as e:
         print(f"에러 발생: {e}")
