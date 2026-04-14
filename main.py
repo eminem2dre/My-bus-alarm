@@ -2,11 +2,10 @@ import os
 import requests
 import datetime
 import pytz
-import xml.etree.ElementTree as ET
 
 
-TARGET_ROUTE_ID = '229000045'
-TARGET_STATION_ID = '19573'
+TARGET_ROUTE_ID = 100100587
+TARGET_STATION_ID = '218000641'
 ALERT_THRESHOLD_MIN = 10
 
 
@@ -22,7 +21,7 @@ def get_bus_info():
         print("필수 환경변수 누락 (BUS_API_KEY, TG_BOT_TOKEN, TG_CHAT_ID)")
         return
 
-    url = "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalList"
+    url = "https://apis.data.go.kr/6410000/busarrivalservice/v2/getBusArrivalListv2"
     params = {
         'serviceKey': api_key,
         'stationId': TARGET_STATION_ID,
@@ -32,19 +31,21 @@ def get_bus_info():
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
 
-        root = ET.fromstring(response.content)
+        data = response.json()
 
-        result_code = root.findtext('.//resultCode')
-        if result_code != '0':
+        result_code = data['response']['msgHeader']['resultCode']
+        if result_code != 0:
             print(f"API 에러 (resultCode: {result_code})")
             return
 
+        arrivals = data['response']['msgBody'].get('busArrivalList', [])
+
         predict_time = None
 
-        for arrival in root.findall('.//busArrivalList'):
-            if arrival.findtext('routeId') == TARGET_ROUTE_ID:
-                raw = arrival.findtext('predictTime1')
-                if raw:
+        for arrival in arrivals:
+            if arrival.get('routeId') == TARGET_ROUTE_ID:
+                raw = arrival.get('predictTime1')
+                if raw and raw != '':
                     predict_time = int(raw)
                 break
 
@@ -68,8 +69,8 @@ def get_bus_info():
 
     except requests.RequestException as e:
         print(f"네트워크 에러: {e}")
-    except ET.ParseError as e:
-        print(f"XML 파싱 에러: {e}")
+    except (KeyError, ValueError) as e:
+        print(f"응답 파싱 에러: {e}")
     except Exception as e:
         print(f"예상치 못한 에러: {e}")
 
