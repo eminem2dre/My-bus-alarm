@@ -68,7 +68,7 @@ if __name__ == "__main__":
     
     # 현재 시간이 평일(월~금) 오전 7시 ~ 8시 사이인지 확인
     # weekday()는 0(월)부터 6(일)까지입니다. 5 미만이면 평일입니다.
-    if now.weekday() < 5 and 7 <= now.hour < 8:
+    if now.weekday() < 5 and 22 <= now.hour < 23:
         remaining_minutes = get_bus_arrival()
         
         # 남은 시간이 10분 이하일 때만 알림 전송
