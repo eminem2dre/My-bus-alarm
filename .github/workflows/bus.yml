@@ -1,12 +1,12 @@
 name: Morning Bus Alarm
 on:
+  workflow_dispatch:
   schedule:
     - cron: '*/5 22-23 * * 1-5'
-  workflow_dispatch:
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    steps:
+    steps:  # <--- 여기서 스페이스 4칸 들어가야 함!
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
