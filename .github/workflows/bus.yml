@@ -1,0 +1,20 @@
+name: Morning Bus Alarm
+on:
+  schedule:
+    - cron: '*/5 22-23 * * 1-5'
+  workflow_dispatch:
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: pip install requests pytz
+      - name: Run
+        env:
+          BUS_API_KEY: ${{ secrets.BUS_API_KEY }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+        run: python main.py
